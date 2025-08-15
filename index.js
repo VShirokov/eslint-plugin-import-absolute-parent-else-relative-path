@@ -1,8 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const isWin = process.platform === 'win32';
-const pathSlash = isWin ? '\\' : '/';
+const pathSlash = path.sep;
 
 function has(map, path) {
   let inner = map;
@@ -79,9 +78,9 @@ exports.rules = {
           if (!isLibrary && relativePath && !relativePath.startsWith('..') && !source.startsWith(`.${pathSlash}`) && relativePath !== source) {
             context.report({
               node,
-              message: `Absolute path for child imports are not allowed. Use \`.${pathSlash}${relativePath}\` instead of \`${source}\`.`,
+              message: `Absolute path for child imports are not allowed. Use \`./${relativePath}\` instead of \`${source}\`.`,
               fix: function (fixer) {
-                return fixer.replaceText(node.source, `'.${pathSlash}${relativePath}'`);
+                return fixer.replaceText(node.source, `'./${relativePath.split(pathSlash).join('/')}'`);
               },
             });
             return;
@@ -90,7 +89,7 @@ exports.rules = {
           const globalAbsolutePath = path.normalize(
             path.join(path.dirname(currentPathFilename), source)
           );
-          const expectedPath = path.relative(baseUrl, globalAbsolutePath);
+          const expectedPath = path.relative(baseUrl, globalAbsolutePath).split(pathSlash).join('/');
           if (source.startsWith('..') && source !== expectedPath) {
             context.report({
               node,
